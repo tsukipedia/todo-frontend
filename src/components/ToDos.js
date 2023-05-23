@@ -14,18 +14,26 @@ export const ToDos = () => {
       {list.loading && <h2>Loading...</h2>}
       {!list.loading && list.error ? <h2>Error: {list.error}</h2> : null}
       {!list.loading && list.todos.length ? (
-        <ul className='list-group mb-4'>
-          {list.todos.map(toDo => (
-            <li key={toDo.id} className='list-group-item'>
-              <div className='form-check'>
-                <input className='form-check-input' type='checkbox' id='flexCheckbox' value='' />
-                <label className='form-check-label' htmlFor='flexCheckbox'>
-                  {toDo.content}
-                </label>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <table className="table">
+          <thead>
+            <tr>
+              <th scope="col">Is done</th>
+              <th scope="col">Content</th>
+              <th scope="col">Priority</th>
+              <th scope="col">Due Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {list.todos.map(toDo => (
+                <tr key={toDo.id}>
+                  <th scope="row"><input className='form-check-input' type='checkbox' id='flexCheckbox' checked={toDo.done} onChange /></th>
+                  <th scope="row">{toDo.content}</th>
+                  <th scope="row">{toDo.priority}</th>
+                  <th scope="row">{toDo.dueDate}</th>
+                </tr>
+            ))}
+          </tbody>
+        </table>
       ) : null}
     </div>
   )
