@@ -4,14 +4,18 @@ import './styles/index.css';
 import App from './App';
 import store from './redux/store'
 import { Provider } from 'react-redux'
+import { ApiProvider } from '@reduxjs/toolkit/query/react'
 import reportWebVitals from './tests/reportWebVitals';
 import 'bootstrap/dist/css/bootstrap.css';
+import { toDoApi } from './redux/slices/ApiSlice'
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <Provider store={store}>
-      <App />
+      <ApiProvider api={toDoApi}>
+        <App />
+      </ApiProvider>
     </Provider>
   </React.StrictMode>
 );

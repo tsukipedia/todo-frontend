@@ -1,8 +1,8 @@
 import { configureStore } from '@reduxjs/toolkit'
-import toDoReducer from './slices/ToDoSlice'
+import { toDoApi } from './slices/ApiSlice'
 
 export default configureStore({
   reducer: {
-    todoList: toDoReducer
+    [toDoApi.reducerPath]: toDoApi.reducer
   },
 });
