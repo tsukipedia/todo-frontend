@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react'
-import { useGetAllToDosQuery } from '../redux/slices/ApiSlice'
 import Box from '@mui/material/Box';
 import Checkbox from '@mui/material/Checkbox';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import Paper from '@mui/material/Paper';
+import React, { useEffect } from 'react';
+import Switch from '@mui/material/Switch';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -10,14 +11,12 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
-import Switch from '@mui/material/Switch';
 import TableSortLabel from '@mui/material/TableSortLabel';
-import { stableSort, getComparator } from "../utils/sort-utils";
+import Typography from '@mui/material/Typography';
+import { useCheckToDoMutation, useGetAllToDosQuery, useGetCountQuery } from '../redux/slices/ApiSlice';
+import { getComparator, stableSort } from "../utils/sort-utils";
 import { visuallyHidden } from '@mui/utils';
-import { Typography } from '@mui/material';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import { useCheckToDoMutation } from '../redux/slices/ApiSlice';
-import { useGetCountQuery } from '../redux/slices/ApiSlice';
+
 
 const headCells = [
   {
@@ -50,7 +49,7 @@ export default function EnhancedTable() {
   const [order, setOrder] = React.useState('asc');
   const [orderBy, setOrderBy] = React.useState('dueDate');
   const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [lastFetchedIndex, setLastFetchedIndex] = React.useState(-1)
   const [visibleRows, setVisibleRows] = React.useState([])
   const [dueDateSort, setDueDateSort] = React.useState(false)
@@ -180,7 +179,7 @@ export default function EnhancedTable() {
           </Table>
         </TableContainer>
         <TablePagination
-          rowsPerPageOptions={[10, 15, 25]}
+          rowsPerPageOptions={[5, 10, 25]}
           component="div"
           count={count}
           rowsPerPage={rowsPerPage}
