@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 export const toDoApi = createApi({
   reducerPath: "toDoApi",
   baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost:9090/' }),
-  tagTypes: ['getToDos'],
+  tagTypes: ['getToDos', 'count'],
   endpoints: (builder) => ({
     getAllToDos: builder.query({
       query: (params) => {
@@ -28,7 +28,8 @@ export const toDoApi = createApi({
       query: () => `todo/metrics`
     }),
     getCount: builder.query({
-      query: () => `todo/count`
+      query: () => `todo/count`,
+      providesTags: ['count']
     }),
     checkToDo: builder.mutation({
       query: (id) => ({
@@ -36,6 +37,14 @@ export const toDoApi = createApi({
         method: 'PATCH',
       }),
       invalidatesTags: ['getToDos'],
+    }),
+    addToDo: builder.mutation({
+      query: (todo) => ({
+        url: `todo`,
+        method: 'POST',
+        body: todo
+      }),
+      invalidatesTags: ['getToDos', 'count'],
     }),
     editToDo: builder.mutation({
       query: (editEntity) => ({
@@ -50,9 +59,12 @@ export const toDoApi = createApi({
         url: `todo/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['getToDos'],
+      invalidatesTags: ['getToDos', 'count'],
     }),
   })
 })
 
-export const { useGetAllToDosQuery, useGetCountQuery, useGetMetricsQuery, useCheckToDoMutation, useEditToDoMutation, useDeleteToDoMutation } = toDoApi
+export const { useGetAllToDosQuery, 
+  useGetCountQuery, useGetMetricsQuery, 
+  useCheckToDoMutation, useEditToDoMutation, 
+  useDeleteToDoMutation, useAddToDoMutation } = toDoApi

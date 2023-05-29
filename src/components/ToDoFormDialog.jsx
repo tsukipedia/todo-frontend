@@ -6,8 +6,8 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import { useSelector, useDispatch } from 'react-redux';
-import { changeDialogState } from '../redux/slices/DialogSlice';
-import { useEditToDoMutation } from '../redux/slices/ApiSlice';
+import { changeDialogState, setDialogToDo } from '../redux/slices/DialogSlice';
+import { useEditToDoMutation, useAddToDoMutation } from '../redux/slices/ApiSlice';
 import { MenuItem } from '@mui/material';
 
 export function ToDoFormDialog() {
@@ -17,7 +17,9 @@ export function ToDoFormDialog() {
 
   const dialog = useSelector((state) => { return state.dialog })
   const dispatch = useDispatch()
-  const [editToDo] = useEditToDoMutation();
+  const [editToDo] = useEditToDoMutation()
+  const [addToDo] = useAddToDoMutation()
+
 
   React.useEffect(() => {
     if (dialog.isOpen && dialog.dialogType === 'edit') {
@@ -44,6 +46,10 @@ export function ToDoFormDialog() {
           priority: priority
         }
       })
+      dispatch(setDialogToDo(null))
+    }
+    else if (dialog.dialogType === 'add') {
+      addToDo({content: content, dueDate: dueDate, priority: priority})
     }
     handleClose()
   }

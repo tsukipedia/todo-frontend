@@ -53,7 +53,7 @@ export function ToDos() {
   const [sortBy, setSortBy] = React.useState(null);
   const [hasUserSorted, setHasUserSorted] = React.useState(false);
 
-  const { data: list, isLoading, isFetching, refetch } = useGetAllToDosQuery({ pageSize: rowsPerPage, lastFetchedIndex: lastFetchedIndex, sortBy: sortBy })
+  const { data: list, isLoading, isFetching } = useGetAllToDosQuery({ pageSize: rowsPerPage, lastFetchedIndex: lastFetchedIndex, sortBy: sortBy })
   const [checkToDo] = useCheckToDoMutation();
   const [deleteToDo] = useDeleteToDoMutation();
   const { data: count, isLoading: countLoading } = useGetCountQuery();
@@ -120,6 +120,11 @@ export function ToDos() {
     setHasUserSorted(true);
   };
 
+  const handleNewToDo = () => {
+    dispatch(changeDialogState())
+    dispatch(setDialogType('add'))
+  }
+
   useEffect(() => {
     if (hasUserSorted) {
       setVisibleRows(
@@ -134,6 +139,13 @@ export function ToDos() {
 
   return (
     <Box sx={{ width: '100%' }} mb={5}>
+      <Button
+        fullWidth
+        className='mb-4 mt-2'
+        onClick={() => handleNewToDo()}
+        variant='outlined'>
+        + new to do
+      </Button>
       <FormControlLabel
         control={<Switch checked={dueDateSort} onChange={handleDueDateSortSwitch} />}
         label="Sort all by due date"
