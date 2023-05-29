@@ -1,4 +1,5 @@
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Paper from '@mui/material/Paper';
@@ -13,10 +14,11 @@ import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import TableSortLabel from '@mui/material/TableSortLabel';
 import Typography from '@mui/material/Typography';
-import { useCheckToDoMutation, useGetAllToDosQuery, useGetCountQuery } from '../redux/slices/ApiSlice';
+import { useCheckToDoMutation, useGetAllToDosQuery, useGetCountQuery, useDeleteToDoMutation } from '../redux/slices/ApiSlice';
 import { getComparator, stableSort } from "../utils/sort-utils";
 import { visuallyHidden } from '@mui/utils';
-
+import { useDispatch } from 'react-redux';
+import { changeDialogState, setDialogToDo, setDialogType } from '../redux/slices/DialogSlice';
 
 const headCells = [
   {
@@ -39,13 +41,7 @@ const headCells = [
   },
 ];
 
-export const ToDos = () => {
-  return (
-    <EnhancedTable />
-  )
-}
-
-export default function EnhancedTable() {
+export function ToDos() {
   const [order, setOrder] = React.useState('asc');
   const [orderBy, setOrderBy] = React.useState('dueDate');
   const [page, setPage] = React.useState(0);
@@ -59,11 +55,13 @@ export default function EnhancedTable() {
 
   const { data: list, isLoading, isFetching, refetch } = useGetAllToDosQuery({ pageSize: rowsPerPage, lastFetchedIndex: lastFetchedIndex, sortBy: sortBy })
   const [checkToDo] = useCheckToDoMutation();
-  const { data: count } = useGetCountQuery();
+  const [deleteToDo] = useDeleteToDoMutation();
+  const { data: count, isLoading: countLoading } = useGetCountQuery();
+  const dispatch = useDispatch()
 
-  const handleClick = (event, id) => {
+  const handleCheck = (event, id) => {
     event.stopPropagation();
-    checkToDo(id).then(() => refetch());
+    checkToDo(id);
   };
 
   const handleChangePage = (event, newPage) => {
@@ -77,7 +75,7 @@ export default function EnhancedTable() {
     setPage(0);
   };
 
-  const handleChangeDueDateSort = (event) => {
+  const handleDueDateSortSwitch = (event) => {
     if (event.target.checked) {
       setDueDateSort(true);
       setPrioritySort(false);
@@ -90,7 +88,7 @@ export default function EnhancedTable() {
     }
   }
 
-  const handleChangePrioritySort = (event) => {
+  const handlePrioritySortSwitch = (event) => {
     if (event.target.checked) {
       setDueDateSort(false);
       setPrioritySort(true);
@@ -101,6 +99,18 @@ export default function EnhancedTable() {
       setPrioritySort(false)
       setSortBy(null)
     }
+  }
+
+  const handleEditAction = (event, toDo) => {
+    event.stopPropagation();
+    dispatch(changeDialogState())
+    dispatch(setDialogType('edit'))
+    dispatch(setDialogToDo(toDo))
+  }
+
+  const handleDeleteAction = (event, id) => {
+    event.stopPropagation();
+    deleteToDo(id)
   }
 
   const handleRequestSort = (event, property) => {
@@ -123,13 +133,13 @@ export default function EnhancedTable() {
   if (isLoading) return (<h3>Loading...</h3>)
 
   return (
-    <Box sx={{ width: '100%' }}>
+    <Box sx={{ width: '100%' }} mb={5}>
       <FormControlLabel
-        control={<Switch checked={dueDateSort} onChange={handleChangeDueDateSort} />}
+        control={<Switch checked={dueDateSort} onChange={handleDueDateSortSwitch} />}
         label="Sort all by due date"
       />
       <FormControlLabel
-        control={<Switch checked={prioritySort} onChange={handleChangePrioritySort} />}
+        control={<Switch checked={prioritySort} onChange={handlePrioritySortSwitch} />}
         label="Sort all by priority"
       />
       <Paper sx={{ width: '100%', mb: 2 }}>
@@ -152,7 +162,7 @@ export default function EnhancedTable() {
                 return (
                   <TableRow
                     hover
-                    onClick={(event) => handleClick(event, row.id)}
+                    onClick={(event) => handleCheck(event, row.id)}
                     role="checkbox"
                     aria-checked={row.done}
                     tabIndex={-1}
@@ -171,7 +181,10 @@ export default function EnhancedTable() {
                     <TableCell>{row.content}</TableCell>
                     <TableCell>{row.priority}</TableCell>
                     <TableCell>{row.dueDate}</TableCell>
-                    <TableCell>Edit/Delete</TableCell>
+                    <TableCell>
+                      <Button onClick={(event) => handleEditAction(event, row)}>Edit</Button>
+                      <Button onClick={(event) => handleDeleteAction(event, row.id)}>Delete</Button>
+                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -181,7 +194,7 @@ export default function EnhancedTable() {
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
           component="div"
-          count={count}
+          count={countLoading ? 0 : count}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
