@@ -1,9 +1,10 @@
+import React, { useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Paper from '@mui/material/Paper';
-import React, { useEffect } from 'react';
 import Switch from '@mui/material/Switch';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -14,11 +15,12 @@ import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import TableSortLabel from '@mui/material/TableSortLabel';
 import Typography from '@mui/material/Typography';
-import { useCheckToDoMutation, useGetAllToDosQuery, useGetCountQuery, useDeleteToDoMutation } from '../redux/slices/ApiSlice';
-import { getComparator, stableSort } from "../utils/sort-utils";
 import { visuallyHidden } from '@mui/utils';
-import { useDispatch } from 'react-redux';
+
+import { getComparator, stableSort } from "../utils/sort-utils";
+import { useCheckToDoMutation, useGetAllToDosQuery, useDeleteToDoMutation } from '../redux/slices/ApiSlice';
 import { changeDialogState, setDialogToDo, setDialogType } from '../redux/slices/DialogSlice';
+import { setPageSize, setLastFetchedIndex, setSortBy, resetFilters } from '../redux/slices/ToDosQueryParamsSlice';
 
 const headCells = [
   {
@@ -45,18 +47,15 @@ export function ToDos() {
   const [order, setOrder] = React.useState('asc');
   const [orderBy, setOrderBy] = React.useState('dueDate');
   const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
-  const [lastFetchedIndex, setLastFetchedIndex] = React.useState(-1)
   const [visibleRows, setVisibleRows] = React.useState([])
   const [dueDateSort, setDueDateSort] = React.useState(false)
   const [prioritySort, setPrioritySort] = React.useState(false)
-  const [sortBy, setSortBy] = React.useState(null);
   const [hasUserSorted, setHasUserSorted] = React.useState(false);
 
-  const { data: list, isLoading, isFetching } = useGetAllToDosQuery({ pageSize: rowsPerPage, lastFetchedIndex: lastFetchedIndex, sortBy: sortBy })
+  const queryParams = useSelector((state) => { return state.toDoQueryParams })
+  const { data: todos, isLoading } = useGetAllToDosQuery(queryParams)
   const [checkToDo] = useCheckToDoMutation();
   const [deleteToDo] = useDeleteToDoMutation();
-  const { data: count, isLoading: countLoading } = useGetCountQuery();
   const dispatch = useDispatch()
 
   const handleCheck = (event, id) => {
@@ -66,12 +65,12 @@ export function ToDos() {
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
-    const index = newPage * rowsPerPage;
-    setLastFetchedIndex(index);
+    const index = newPage * queryParams.pageSize - 1;
+    dispatch(setLastFetchedIndex(index))
   };
 
   const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
+    dispatch(setPageSize(parseInt(event.target.value)))
     setPage(0);
   };
 
@@ -79,12 +78,13 @@ export function ToDos() {
     if (event.target.checked) {
       setDueDateSort(true);
       setPrioritySort(false);
-      setSortBy('due date');
+      dispatch(resetFilters())
+      dispatch(setSortBy('due date'))
       setOrderBy('due date')
     }
     else {
       setDueDateSort(false)
-      setSortBy(null)
+      dispatch(setSortBy(null))
     }
   }
 
@@ -92,12 +92,13 @@ export function ToDos() {
     if (event.target.checked) {
       setDueDateSort(false);
       setPrioritySort(true);
-      setSortBy('priority');
+      dispatch(resetFilters())
+      dispatch(setSortBy('priority'))
       setOrderBy('priority')
     }
     else {
       setPrioritySort(false)
-      setSortBy(null)
+      dispatch(setSortBy(null))
     }
   }
 
@@ -128,12 +129,12 @@ export function ToDos() {
   useEffect(() => {
     if (hasUserSorted) {
       setVisibleRows(
-        stableSort(list ?? [], getComparator(order, orderBy))
+        stableSort(todos?.list ?? [], getComparator(order, orderBy))
       )
     } else {
-      setVisibleRows(list ?? []);
+      setVisibleRows(todos?.list ?? []);
     }
-  }, [isLoading, list, page, rowsPerPage, hasUserSorted, order, orderBy])
+  }, [isLoading, todos, page, queryParams, hasUserSorted, order, orderBy])
 
   if (isLoading) return (<h3>Loading...</h3>)
 
@@ -147,11 +148,11 @@ export function ToDos() {
         + new to do
       </Button>
       <FormControlLabel
-        control={<Switch checked={dueDateSort} onChange={handleDueDateSortSwitch} />}
+        control={<Switch checked={dueDateSort && !!queryParams.sortBy} onChange={handleDueDateSortSwitch} />}
         label="Sort all by due date"
       />
       <FormControlLabel
-        control={<Switch checked={prioritySort} onChange={handlePrioritySortSwitch} />}
+        control={<Switch checked={prioritySort && !!queryParams.sortBy} onChange={handlePrioritySortSwitch} />}
         label="Sort all by priority"
       />
       <Paper sx={{ width: '100%', mb: 2 }}>
@@ -165,7 +166,7 @@ export function ToDos() {
               order={order}
               orderBy={orderBy}
               onRequestSort={handleRequestSort}
-              rowCount={list?.length}
+              rowCount={todos.list?.length}
             />
             <TableBody>
               {visibleRows.map((row, index) => {
@@ -206,15 +207,11 @@ export function ToDos() {
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
           component="div"
-          count={countLoading ? 0 : count}
-          rowsPerPage={rowsPerPage}
+          count={isLoading ? 0 : todos.totalToDos}
+          rowsPerPage={queryParams.pageSize}
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
-          nextIconButtonProps={{
-            className: "brand-icon",
-            disabled: isFetching
-          }}
         />
       </Paper>
     </Box>
@@ -222,7 +219,7 @@ export function ToDos() {
 }
 
 function EnhancedTableHead(props) {
-  const { onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort } =
+  const { order, orderBy, onRequestSort } =
     props;
   const createSortHandler = (property) => (event) => {
     onRequestSort(event, property);
@@ -231,26 +228,15 @@ function EnhancedTableHead(props) {
   return (
     <TableHead>
       <TableRow>
-        <TableCell padding="checkbox">
-          <Checkbox
-            color="primary"
-            indeterminate={numSelected > 0 && numSelected < rowCount}
-            checked={rowCount > 0 && numSelected === rowCount}
-            onChange={onSelectAllClick}
-            inputProps={{
-              'aria-label': 'select all desserts',
-            }}
-          />
-        </TableCell>
+        <TableCell padding="checkbox" />
         {headCells.map((headCell) => (
           <TableCell
             key={headCell.id}
             sortDirection={orderBy === headCell.id ? order : false}
           >
             {headCell.sortable ? (
-
               <TableSortLabel
-                active={orderBy === headCell.id}
+                active={true}
                 direction={orderBy === headCell.id ? order : 'asc'}
                 onClick={createSortHandler(headCell.id)}
               >

@@ -3,11 +3,15 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 export const toDoApi = createApi({
   reducerPath: "toDoApi",
   baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost:9090/' }),
-  tagTypes: ['getToDos', 'count'],
+  tagTypes: ['getToDos'],
   endpoints: (builder) => ({
     getAllToDos: builder.query({
       query: (params) => {
-        let endpoint = `todo?pageSize=${params.pageSize}&lastFetchedIndex=${params.lastFetchedIndex}`
+        let endpoint = `todo`
+        if (params.name || params.priority || params.isDone !== undefined) {
+          endpoint += `/filter`
+        }
+        endpoint += `?pageSize=${params.pageSize}&lastFetchedIndex=${params.lastFetchedIndex}`
         if (params.sortBy) {
           endpoint += `&sortBy=${params.sortBy}`;
         }
@@ -20,16 +24,13 @@ export const toDoApi = createApi({
         if (params.isDone !== undefined) {
           endpoint += `&isDone=${params.isDone}`;
         }
+        console.log(':::', endpoint)
         return endpoint
       },
       providesTags: ['getToDos']
     }),
     getMetrics: builder.query({
       query: () => `todo/metrics`
-    }),
-    getCount: builder.query({
-      query: () => `todo/count`,
-      providesTags: ['count']
     }),
     checkToDo: builder.mutation({
       query: (id) => ({
@@ -44,7 +45,7 @@ export const toDoApi = createApi({
         method: 'POST',
         body: todo
       }),
-      invalidatesTags: ['getToDos', 'count'],
+      invalidatesTags: ['getToDos'],
     }),
     editToDo: builder.mutation({
       query: (editEntity) => ({
@@ -59,12 +60,12 @@ export const toDoApi = createApi({
         url: `todo/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['getToDos', 'count'],
-    }),
+      invalidatesTags: ['getToDos'],
+    })
   })
 })
 
-export const { useGetAllToDosQuery, 
-  useGetCountQuery, useGetMetricsQuery, 
-  useCheckToDoMutation, useEditToDoMutation, 
-  useDeleteToDoMutation, useAddToDoMutation } = toDoApi
+export const { useGetAllToDosQuery,
+  useGetMetricsQuery, useCheckToDoMutation, 
+  useEditToDoMutation, useDeleteToDoMutation, 
+  useAddToDoMutation } = toDoApi
