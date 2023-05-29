@@ -24,23 +24,23 @@ export function Metrics() {
           </Typography>
         </Grid>
         <Grid item xs={6}>
-          {isLoading ? "Loading..." : metrics.averageTime}
+          {isLoading ? "Loading..." : metrics?.averageTime}
         </Grid>
         <Grid item xs={6}>
           <List>
             <ListItem>
               <ListItemText>
-                HIGH: {isLoading ? "Loading..." : metrics.highPriorityAverageTime} 
+                HIGH: {isLoading ? "Loading..." : metrics?.highPriorityAverageTime} 
               </ListItemText>
             </ListItem>
             <ListItem>
               <ListItemText>
-                MEDIUM: {isLoading ? "Loading..." : metrics.mediumPriorityAverageTime}
+                MEDIUM: {isLoading ? "Loading..." : metrics?.mediumPriorityAverageTime}
               </ListItemText>
             </ListItem>
             <ListItem>
               <ListItemText>
-                LOW: {isLoading ? "Loading..." : metrics.highPriorityAverageTime}
+                LOW: {isLoading ? "Loading..." : metrics?.lowPriorityAverageTime}
               </ListItemText>
             </ListItem>
           </List>

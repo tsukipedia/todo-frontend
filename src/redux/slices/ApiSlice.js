@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 export const toDoApi = createApi({
   reducerPath: "toDoApi",
   baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost:9090/' }),
-  tagTypes: ['getToDos'],
+  tagTypes: ['getToDos', 'metrics'],
   endpoints: (builder) => ({
     getAllToDos: builder.query({
       query: (params) => {
@@ -24,20 +24,20 @@ export const toDoApi = createApi({
         if (params.isDone !== undefined) {
           endpoint += `&isDone=${params.isDone}`;
         }
-        console.log(':::', endpoint)
         return endpoint
       },
       providesTags: ['getToDos']
     }),
     getMetrics: builder.query({
-      query: () => `todo/metrics`
+      query: () => `todo/metrics`,
+      providesTags: ['metrics']
     }),
     checkToDo: builder.mutation({
       query: (id) => ({
         url: `todo/check/${id}`,
         method: 'PATCH',
       }),
-      invalidatesTags: ['getToDos'],
+      invalidatesTags: ['getToDos', 'metrics'],
     }),
     addToDo: builder.mutation({
       query: (todo) => ({
@@ -60,7 +60,7 @@ export const toDoApi = createApi({
         url: `todo/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['getToDos'],
+      invalidatesTags: ['getToDos', 'metrics'],
     })
   })
 })
